@@ -20,4 +20,5 @@ steps:
 - task: PublishParasoftResults@1
   inputs:
     resultsFiles: |
-      **/*.xml
+      $(report-pattern)
+
