@@ -20,6 +20,4 @@ steps:
 - task: PublishParasoftResults@1
   inputs:
     resultsFiles: |
-      **/rep*.xml
-      **/rep*.sarif
-      **/coverage.xml
+      **/*.xml
