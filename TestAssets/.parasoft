@@ -1,0 +1,13 @@
+#Thu Oct 22 17:14:44 CST 2026
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/datasources=ds_1792654840559_1819207675
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.contain_header=true
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.csv_encoding=UTF-8
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.csv_file=${test_suite_loc}\\customers.csv
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.first_row=0
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.last_row=-1
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.name=Customers
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.quote="
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.separator=,
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.type=CSV
+.datasources/ds-module.wk\:///TestAssets/generated_by_mcp/CICD1179_ParaBank_Parameterized.tst\#0000000000/ds_1792654840559_1819207675.use_all_rows=true
+project.path=/TestAssets
