@@ -1,0 +1,126 @@
+name: Verify SOAtest action with existing reports
+on:
+  workflow_dispatch:
+    inputs:
+      action_ref:
+        description: Published run-soatest-action commit SHA
+        required: true
+        default: d06f7acaec77ed6007bfe23a691cb048107314bb
+
+permissions:
+  contents: read
+
+jobs:
+  action-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: parasoft/run-soatest-action
+          ref: ${{ inputs.action_ref }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: git rev-parse HEAD
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
+
+  fixture:
+    name: Fixture replay / ${{ matrix.id }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: execution
+            report: SOAtest_functional_execution_violations.xml
+          - id: change-one
+            report: soatest_parabank_change_impact_with_one_functional_test.xml
+          - id: change-none
+            report: soatest_parabank_change_impact_without_functional_tests.xml
+          - id: change-all
+            report: soatest_parabank_change_impact_with_all_functional_tests.xml
+          - id: visual
+            report: soatest_visual_difference.xml
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: parasoft/run-soatest-action
+          ref: ${{ inputs.action_ref }}
+          path: action-under-test
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Record candidate and create fixture-only CLI
+        run: |
+          git -C action-under-test rev-parse HEAD
+          python3 scripts/replay_soatest_report.py --install "$RUNNER_TEMP/soatest-replay"
+      - name: Invoke actual action using replayed report
+        uses: ./action-under-test
+        env:
+          SOATEST_REPLAY_REPORT: ${{ github.workspace }}/${{ matrix.report }}
+        with:
+          installDir: ${{ runner.temp }}/soatest-replay
+          soatestWorkspace: ${{ github.workspace }}
+          resource: TestAssets
+          report: out/${{ matrix.id }}/report.xml
+          reportFormat: xml
+          convertReportToXUnit: true
+      - name: Verify converted report
+        run: >-
+          python3 scripts/verify_soatest_xunit.py
+          '${{ matrix.id }}' '${{ matrix.report }}'
+          'out/${{ matrix.id }}/report-xunit.xml'
+          'out/${{ matrix.id }}/evidence.json'
+      - name: Publish this report separately
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: SOAtest fixture / ${{ matrix.id }}
+          files: out/${{ matrix.id }}/report-xunit.xml
+          comment_mode: 'off'
+          compare_to_earlier_commit: 'false'
+          fail_on: nothing
+          action_fail: 'true'
+          action_fail_on_inconclusive: 'true'
+      - name: Retain original, converted report and evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: soatest-${{ matrix.id }}
+          path: out/${{ matrix.id }}/
+          if-no-files-found: error
+
+  totals:
+    needs: fixture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: soatest-*
+          path: evidence
+      - name: Verify combined totals
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          records = [json.loads(p.read_text()) for p in Path('evidence').glob('soatest-*/evidence.json')]
+          expected_ids = {'execution', 'change-one', 'change-none', 'change-all', 'visual'}
+          assert len(records) == 5 and {r['id'] for r in records} == expected_ids
+          assert sum(r['tests'] for r in records) == 561
+          assert sum(r['failures'] for r in records) == 32
+          assert sum(r['passed'] for r in records) == 529
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write('Fixture verification: **561 tests, 32 expected failures, 529 passed**.\n')
+          PY
